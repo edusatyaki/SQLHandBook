@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SQL Master - Futuristic Interface</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inconsolata:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* Vintage Book Palette */
+            --bg-color: #2e1e11;
+            /* Dark Wood */
+            --interface-bg: #fdf5e6;
+            /* Parchment Page */
+            --interface-contrast: #f4e4bc;
+            /* Aged Parchment */
+            --text-main: #2b1d0e;
+            /* Dark Ink */
+            --text-dim: #6e5c5c;
+            /* Faded Ink */
+
+            --accent-primary: #800000;
+            /* Deep Red Header */
+            --accent-secondary: #000080;
+            /* Navy Blue Elements */
+            --accent-success: #006400;
+            /* Forest Green */
+
+            --ink-shadow: 0 1px 2px rgba(44, 29, 14, 0.2);
+            --paper-texture: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+            /* Optional texture availability, sticking to color for safety */
+
+            --code-bg: #f0e6d2;
+            --code-text: #2f4f4f;
+
+            --book-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            --spine-color: #5d4037;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, transparent 70%),
+                repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.02) 0px, rgba(0, 0, 0, 0.02) 2px, transparent 2px, transparent 4px);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+
+        /* 3D Scene Setup */
+        .scene {
+            width: 95%;
+            max-width: 1400px;
+            /* Slightly narrower for book feel */
+            height: 90vh;
+            perspective: 2500px;
+        }
+
+        .book-container {
+            width: 100%;
+            height: 100%;
+            background-color: var(--interface-bg);
+            display: flex;
+            box-shadow:
+                var(--book-shadow),
+                inset 0 0 60px rgba(60, 40, 20, 0.1);
+            border-radius: 4px 12px 12px 4px;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        /* Physical Spine */
+        .book-spine {
+            width: 50px;
+            background: linear-gradient(to right, #3e2723, #5d4037, #3e2723);
+            height: 100%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            box-shadow: inset 2px 0 5px rgba(0, 0, 0, 0.5), inset -2px 0 5px rgba(0, 0, 0, 0.5);
+            border-radius: 2px;
+        }
+
+        /* Hinge detail */
+        .book-spine::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            bottom: 20px;
+            left: 50%;
+            width: 80%;
+            transform: translateX(-50%);
+            border-left: 1px dashed rgba(255, 255, 255, 0.1);
+            border-right: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        /* Pages */
+        .page {
+            flex: 1;
+            padding: 50px 60px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-color: var(--interface-bg);
+            backface-visibility: hidden;
+
+            /* Paper Grain/Texture simulation */
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0) 10%);
+        }
+
+        /* Scrollbar Styling for Parchment */
+        .page::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .page::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .page::-webkit-scrollbar-thumb {
+            background: #d2b48c;
+            border-radius: 4px;
+        }
+
+        .left-page {
+            padding-right: 70px;
+            /* Space near spine */
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            transform-origin: right center;
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .right-page {
+            padding-left: 70px;
+            /* Space near spine */
+            background-color: var(--interface-bg);
+            /* Same color for cohesion */
+            transform-origin: left center;
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+            background-image: linear-gradient(to left, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0) 10%);
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 2.2rem;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px double var(--text-dim);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            display: block;
+            text-shadow: none;
+        }
+
+        h1::before {
+            content: none;
+        }
+
+        h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            border-left: none;
+            padding-bottom: 5px;
+            padding-left: 0;
+            display: inline-block;
+        }
+
+        p {
+            line-height: 1.7;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+
+        /* Code Container - Like a pasted note */
+        .code-container {
+            font-family: 'Inconsolata', monospace;
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 20px;
+            border-radius: 2px;
+            font-size: 1rem;
+            margin-bottom: 25px;
+            border: 1px solid #d2b48c;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .code-container::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent-secondary);
+            opacity: 0.5;
+        }
+
+        .code-container::after {
+            content: none;
+        }
+
+        /* Explanation Box */
+        .explanation-box {
+            background-color: rgba(255, 255, 255, 0.4);
+            border: 1px dashed var(--text-dim);
+            border-left: 1px dashed var(--text-dim);
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-style: italic;
+            color: var(--text-main);
+        }
+
+        /* Cover Page Styles */
+        .cover-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 40px;
+            /* box-shadow: inset 0 0 80px rgba(139, 69, 19, 0.15); */
+            background-image: radial-gradient(circle at center, transparent 30%, rgba(255, 255, 255, 0.4) 100%),
+                url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .cover-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            border-top: 3px solid var(--accent-primary);
+            border-bottom: 3px solid var(--accent-primary);
+            margin-bottom: 20px;
+            padding: 20px 0;
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+
+        .cover-sub {
+            font-size: 1.2rem;
+            color: var(--accent-secondary);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 40px;
+        }
+
+        .author-block {
+            margin-top: auto;
+            border-top: 1px solid var(--text-dim);
+            padding-top: 20px;
+            width: 60%;
+        }
+
+        .author-name {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .author-title {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Workspace Table */
+        .dataset-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--accent-red);
+            margin-bottom: 5px;
+            display: block;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'Inconsolata', monospace;
+        }
+
+        .dataset-label::before {
+            content: none;
+        }
+
+        .table-wrapper {
+            border: 1px solid var(--text-dim);
+            background: #fffdf5;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            max-height: 250px;
+            overflow-y: auto;
+            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 0;
+        }
+
+        .sql-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inconsolata', monospace;
+            font-size: 0.95rem;
+        }
+
+        .sql-table th {
+            background-color: #efe5d0;
+            color: var(--text-main);
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 2px solid var(--text-dim);
+            white-space: nowrap;
+            font-weight: bold;
+            letter-spacing: 0;
+        }
+
+        .sql-table td {
+            padding: 8px 12px;
+            color: var(--text-main);
+            border-bottom: 1px solid #e0d0b0;
+            white-space: nowrap;
+        }
+
+        .sql-table tr:hover td {
+            background-color: rgba(139, 69, 19, 0.05);
+            color: var(--text-main);
+        }
+
+        /* Buttons */
+        .run-btn {
+            background: #2e1e11;
+            color: #fff;
+            border: 2px solid #2e1e11;
+            padding: 12px 0;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .run-btn:hover {
+            background: #4a3b32;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .run-btn svg {
+            fill: currentColor;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Nav Buttons */
+        .pagination {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-style: italic;
+            text-decoration: none;
+            font-weight: 400;
+        }
+
+        .nav-btn:hover {
+            color: var(--accent-red);
+            text-shadow: none;
+            border: none;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: default;
+            color: var(--text-dim);
+            text-decoration: none;
+            border: none;
+        }
+
+        /* Output Animation */
+        .output-section {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease;
+            max-height: 0;
+            overflow: hidden;
+            border-top: none;
+            margin-top: 0;
+        }
+
+        .output-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 800px;
+            /* Increased to fit larger data */
+            padding-top: 0;
+            overflow: visible;
+            /* Allow internal scrollbars to work freely */
+        }
+
+        .output-scroll-wrapper {
+            max-height: 350px !important;
+            overflow-y: auto;
+        }
+
+        .anim-row {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease-out;
+        }
+
+        .anim-row.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Index List */
+        .index-list {
+            column-count: 1;
+            list-style: none;
+            padding-bottom: 20px;
+        }
+
+        .index-item {
+            margin-bottom: 6px;
+            break-inside: avoid;
+        }
+
+        .index-item a {
+            text-decoration: none;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dotted #ccc;
+            padding: 2px 0;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .index-item a:hover {
+            color: var(--accent-red);
+            border-bottom: 1px solid var(--accent-red);
+            text-shadow: none;
+        }
+
+        .index-item b {
+            font-family: 'Inconsolata', monospace;
+            color: var(--text-main);
+        }
+
+        /* Page Turn Animation */
+        .turn-next .right-page {
+            animation: flipOutRight 0.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+        }
+
+        .turn-next .left-page {
+            animation: flipInLeft 0.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+        }
+
+        .turn-prev .left-page {
+            animation: flipOutLeft 0.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+        }
+
+        .turn-prev .right-page {
+            animation: flipInRight 0.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+        }
+
+        @keyframes flipOutRight {
+            0% {
+                transform: rotateY(0deg);
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: rotateY(-180deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes flipInLeft {
+            0% {
+                transform: rotateY(180deg);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: rotateY(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes flipOutLeft {
+            0% {
+                transform: rotateY(0deg);
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: rotateY(180deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes flipInRight {
+            0% {
+                transform: rotateY(-180deg);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: rotateY(0deg);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scene">
+        <div class="book-container" id="book">
+            <div class="book-spine"></div>
+            <div class="page left-page" id="left-page"></div>
+            <div class="page right-page" id="right-page"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DATASET ---
+        const sourceData = {
+            headers: ['ID', 'Name', 'DeptID', 'Salary', 'Joined', 'MgrID'],
+            rows: [
+                [101, 'Alice', 1, 60000, '2022-01-15', 'NULL'],
+                [102, 'Bob', 2, 45000, '2023-03-10', 101],
+                [103, 'Charlie', 1, 75000, '2021-06-20', 101],
+                [104, 'David', 3, 52000, '2023-11-05', 102],
+                [105, 'Eve', 2, 88000, '2020-08-12', 'NULL'],
+                [106, 'Frank', 1, 48000, '2023-01-20', 103]
+            ]
+        };
+
+        // --- 2. QUESTIONS ARRAY (100) ---
+        const questions = [
+            { q: "Fetch all details of employees.", code: "SELECT * FROM Employees;" },
+            { q: "Fetch only the Name and Salary of all employees.", code: "SELECT Name, Salary FROM Employees;" },
+            { q: "Fetch unique values of DepartmentID.", code: "SELECT DISTINCT DepartmentID FROM Employees;" },
+            { q: "Find employees with a salary greater than 50,000.", code: "SELECT * FROM Employees WHERE Salary > 50000;" },
+            { q: "Find employees joined in the year 2023.", code: "SELECT * FROM Employees WHERE YEAR(Joined) = 2023;" },
+            { q: "Fetch employees whose name starts with 'A'.", code: "SELECT * FROM Employees WHERE Name LIKE 'A%';" },
+            { q: "Fetch employees whose name ends with 'n'.", code: "SELECT * FROM Employees WHERE Name LIKE '%n';" },
+            { q: "Fetch employees whose name contains the letter 'z'.", code: "SELECT * FROM Employees WHERE Name LIKE '%z%';" },
+            { q: "Find employees with salaries between 30,000 and 60,000.", code: "SELECT * FROM Employees WHERE Salary BETWEEN 30000 AND 60000;" },
+            { q: "Find employees in Dept 1, 2, or 5.", code: "SELECT * FROM Employees WHERE DeptID IN (1, 2, 5);" },
+            { q: "Find employees NOT in Dept 1, 2, or 5.", code: "SELECT * FROM Employees WHERE DeptID NOT IN (1, 2, 5);" },
+            { q: "Sort employees by salary in descending order.", code: "SELECT * FROM Employees ORDER BY Salary DESC;" },
+            { q: "Sort employees by Department (Asc) then Salary (Desc).", code: "SELECT * FROM Employees ORDER BY DeptID ASC, Salary DESC;" },
+            { q: "Fetch the top 5 highest-paid employees.", code: "SELECT TOP 5 * FROM Employees ORDER BY Salary DESC;" },
+            { q: "Check for employees whose ManagerID is NULL.", code: "SELECT * FROM Employees WHERE MgrID IS NULL;" },
+            { q: "Combine Name and DepartmentID into a single column.", code: "SELECT CONCAT(Name, ' - ', DeptID) AS Details FROM Employees;" },
+            { q: "Fetch the current date and time.", code: "SELECT GETDATE();" },
+            { q: "Fetch the first 3 characters of the name.", code: "SELECT SUBSTRING(Name, 1, 3) FROM Employees;" },
+            { q: "Fetch employees replacing 'NULL' MgrID with 'No Manager'.", code: "SELECT Name, COALESCE(MgrID, 'No Manager') FROM Employees;" },
+            { q: "Find the length of the Name of each employee.", code: "SELECT Name, LEN(Name) FROM Employees;" },
+            { q: "Find the total salary of all employees.", code: "SELECT SUM(Salary) FROM Employees;" },
+            { q: "Find the average salary of employees.", code: "SELECT AVG(Salary) FROM Employees;" },
+            { q: "Find the total number of employees.", code: "SELECT COUNT(*) FROM Employees;" },
+            { q: "Find the number of employees in each department.", code: "SELECT DeptID, COUNT(*) FROM Employees GROUP BY DeptID;" },
+            { q: "Find the maximum and minimum salary.", code: "SELECT MAX(Salary), MIN(Salary) FROM Employees;" },
+            { q: "Find the average salary per department.", code: "SELECT DeptID, AVG(Salary) FROM Employees GROUP BY DeptID;" },
+            { q: "Find departments that have more than 2 employees.", code: "SELECT DeptID, COUNT(*) FROM Employees GROUP BY DeptID HAVING COUNT(*) > 2;" },
+            { q: "Inner Join: List employee names and department names.", code: "SELECT E.Name, D.DeptName FROM Employees E INNER JOIN Departments D ON E.DeptID = D.ID;" },
+            { q: "Left Join: List employees and departments (incl. no dept).", code: "SELECT E.Name, D.DeptName FROM Employees E LEFT JOIN Departments D ON E.DeptID = D.ID;" },
+            { q: "Right Join: List departments and employees.", code: "SELECT E.Name, D.DeptName FROM Employees E RIGHT JOIN Departments D ON E.DeptID = D.ID;" },
+            { q: "Full Join: List all employees and all departments.", code: "SELECT E.Name, D.DeptName FROM Employees E FULL OUTER JOIN Departments D ON E.DeptID = D.ID;" },
+            { q: "Cross Join: Generate all combinations.", code: "SELECT E.Name, D.DeptName FROM Employees E CROSS JOIN Departments D;" },
+            { q: "Self Join: Find employees who earn more than managers.", code: "SELECT E.Name, M.Name FROM Employees E JOIN Employees M ON E.MgrID = M.ID WHERE E.Salary > M.Salary;" },
+            { q: "Find the second highest salary (Subquery).", code: "SELECT MAX(Salary) FROM Employees WHERE Salary < (SELECT MAX(Salary) FROM Employees);" },
+            { q: "Find duplicate names in the Employees table.", code: "SELECT Name, COUNT(*) FROM Employees GROUP BY Name HAVING COUNT(*) > 1;" },
+            { q: "Clone a table structure (without data).", code: "SELECT * INTO NewTable FROM Employees WHERE 1=0;" },
+            { q: "Copy data from one table to another.", code: "INSERT INTO TableB SELECT * FROM TableA;" },
+            { q: "Display the first 50% of records.", code: "SELECT TOP 50 PERCENT * FROM Employees;" },
+            { q: "Find employees who share the same salary.", code: "SELECT E1.Name, E1.Salary FROM Employees E1 JOIN Employees E2 ON E1.Salary = E2.Salary AND E1.ID <> E2.ID;" },
+            { q: "Display the current date in 'DD-MM-YYYY' format.", code: "SELECT FORMAT(GETDATE(), 'dd-MM-yyyy');" },
+            { q: "Find the employee with the highest salary in each dept.", code: "SELECT DeptID, MAX(Salary) FROM Employees GROUP BY DeptID;" },
+            { q: "Find total salary payout for each year joined.", code: "SELECT YEAR(Joined), SUM(Salary) FROM Employees GROUP BY YEAR(Joined);" },
+            { q: "Check if a specific table exists.", code: "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Employees';" },
+            { q: "Update salary by 10% for Dept 1.", code: "UPDATE Employees SET Salary = Salary * 1.10 WHERE DeptID = 1;" },
+            { q: "Delete employees who have not logged in for 1 year.", code: "DELETE FROM Employees WHERE LastLogin < DATEADD(year, -1, GETDATE());" },
+            { q: "Find pattern '100_200' (underscore handling).", code: "SELECT * FROM Table WHERE Col LIKE '%100\\_200%' ESCAPE '\\';" },
+            { q: "Select all odd numbered rows.", code: "SELECT * FROM Employees WHERE ID % 2 = 1;" },
+            { q: "Select all even numbered rows.", code: "SELECT * FROM Employees WHERE ID % 2 = 0;" },
+            { q: "Find the 3rd highest salary (Generic).", code: "SELECT TOP 1 Salary FROM (SELECT TOP 3 Salary FROM Employees ORDER BY Salary DESC) AS T ORDER BY Salary ASC;" },
+            { q: "Categorize salaries as High, Medium, Low (CASE).", code: "SELECT Name, CASE WHEN Salary > 50k THEN 'High' ELSE 'Low' END FROM Employees;" },
+            { q: "Fetch 3rd highest salary using DENSE_RANK.", code: "SELECT * FROM (SELECT Salary, DENSE_RANK() OVER(ORDER BY Salary DESC) as Rk FROM Emp) T WHERE Rk=3;" },
+            { q: "Find top 2 highest-paid employees in EACH dept.", code: "SELECT * FROM (SELECT *, ROW_NUMBER() OVER(PARTITION BY DeptID ORDER BY Sal DESC) as Rn FROM Emp) T WHERE Rn<=2;" },
+            { q: "Calculate running total of salaries.", code: "SELECT Name, Salary, SUM(Salary) OVER (ORDER BY ID) AS RunningTotal FROM Employees;" },
+            { q: "Find diff between salary and previous salary.", code: "SELECT Name, Salary - LAG(Salary) OVER (ORDER BY Salary) FROM Employees;" },
+            { q: "Find diff between salary and next salary.", code: "SELECT Name, Salary - LEAD(Salary) OVER (ORDER BY Salary) FROM Employees;" },
+            { q: "CTE to find the average salary.", code: "WITH AvgSal AS (SELECT AVG(Salary) as Avg FROM Employees) SELECT * FROM Employees, AvgSal WHERE Salary > Avg;" },
+            { q: "Recursive CTE: Generate numbers 1 to 10.", code: "WITH Nums AS (SELECT 1 AS N UNION ALL SELECT N+1 FROM Nums WHERE N<10) SELECT * FROM Nums;" },
+            { q: "Delete duplicate rows, keep lowest ID.", code: "DELETE FROM Emp WHERE ID NOT IN (SELECT MIN(ID) FROM Emp GROUP BY Name, Salary);" },
+            { q: "Find employees with the same joining date.", code: "SELECT E1.Name FROM Employees E1 JOIN Employees E2 ON E1.Joined = E2.Joined AND E1.ID < E2.ID;" },
+            { q: "PIVOT: Dept names as columns.", code: "SELECT * FROM (SELECT DeptID, Salary FROM Emp) PIVOT (SUM(Salary) FOR DeptID IN ([1],[2],[3])) AS Pvt;" },
+            { q: "UNPIVOT concept.", code: "-- Converts columns back into rows (Reverse of PIVOT)." },
+            { q: "Find the median salary.", code: "SELECT ((SELECT TOP 1 Sal FROM (TOP 50%) ASC) + (SELECT TOP 1 Sal FROM (TOP 50%) DESC))/2;" },
+            { q: "Identify Gaps in IDs.", code: "SELECT ID + 1 FROM Emp E WHERE NOT EXISTS (SELECT 1 FROM Emp E2 WHERE E2.ID = E.ID + 1);" },
+            { q: "Find Nth highest salary without window functions.", code: "SELECT Salary FROM Emp E1 WHERE N-1 = (SELECT COUNT(DISTINCT Salary) FROM Emp E2 WHERE E2.Sal > E1.Sal);" },
+            { q: "Calculate age from DateOfBirth.", code: "SELECT DATEDIFF(year, DOB, GETDATE()) FROM Employees;" },
+            { q: "Find customers who have never placed an order.", code: "SELECT C.Name FROM Customers C LEFT JOIN Orders O ON C.ID = O.CustID WHERE O.ID IS NULL;" },
+            { q: "Update table based on values from another table.", code: "UPDATE E SET Salary = E.Salary + B.Bonus FROM Employees E JOIN Bonuses B ON E.ID = B.ID;" },
+            { q: "Find the manager's name for each employee.", code: "SELECT E.Name AS Emp, M.Name AS Mgr FROM Employees E LEFT JOIN Employees M ON E.MgrID = M.ID;" },
+            { q: "Find employees with the longest tenure.", code: "SELECT TOP 1 * FROM Employees ORDER BY Joined ASC;" },
+            { q: "Combine two tables using UNION.", code: "SELECT Name FROM Employees UNION SELECT Name FROM Contractors;" },
+            { q: "Combine two tables using UNION ALL.", code: "SELECT Name FROM Employees UNION ALL SELECT Name FROM Contractors;" },
+            { q: "INTERSECT: Find names common to both tables.", code: "SELECT Name FROM Employees INTERSECT SELECT Name FROM Customers;" },
+            { q: "EXCEPT: Find names in Employees but NOT in Customers.", code: "SELECT Name FROM Employees EXCEPT SELECT Name FROM Customers;" },
+            { q: "Find department with highest total salary.", code: "SELECT TOP 1 DeptID, SUM(Salary) FROM Employees GROUP BY DeptID ORDER BY SUM(Salary) DESC;" },
+            { q: "Select distinct records without DISTINCT.", code: "SELECT Name FROM Employees GROUP BY Name;" },
+            { q: "Count of 'A' characters in a string.", code: "SELECT LEN(Name) - LEN(REPLACE(Name, 'A', '')) FROM Employees;" },
+            { q: "Cumulative sum of sales by month.", code: "SELECT Date, Amount, SUM(Amount) OVER (ORDER BY Date) FROM Orders;" },
+            { q: "3 month moving average of sales.", code: "SELECT Date, AVG(Amount) OVER (ORDER BY Date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) FROM Orders;" },
+            { q: "Percentage of total salary per department.", code: "SELECT DeptID, SUM(Sal) * 100.0 / (SELECT SUM(Sal) FROM Emp) FROM Emp GROUP BY DeptID;" },
+            { q: "Partition data into 4 quartiles.", code: "SELECT Name, Salary, NTILE(4) OVER (ORDER BY Salary) FROM Employees;" },
+            { q: "Swap values 'M' to 'F' in single update.", code: "UPDATE Emp SET Gender = CASE WHEN Gender='M' THEN 'F' ELSE 'M' END;" },
+            { q: "Find employees hired in last 30 days.", code: "SELECT * FROM Emp WHERE Joined >= DATEADD(day, -30, GETDATE());" },
+            { q: "Find first order for each customer.", code: "SELECT * FROM (SELECT *, ROW_NUMBER() OVER(PARTITION BY CustID ORDER BY Date) as rn FROM Orders) T WHERE rn=1;" },
+            { q: "Find last order for each customer.", code: "SELECT * FROM (SELECT *, ROW_NUMBER() OVER(PARTITION BY CustID ORDER BY Date DESC) as rn FROM Orders) T WHERE rn=1;" },
+            { q: "Find days where sales were higher than previous day.", code: "SELECT O1.Date FROM Orders O1 JOIN Orders O2 ON O1.Date = O2.Date + 1 WHERE O1.Amt > O2.Amt;" },
+            { q: "Count weekends in current month.", code: "-- Requires generating dates." },
+            { q: "Validate if an email is valid.", code: "SELECT * FROM Users WHERE Email LIKE '%_@__%.__%';" },
+            { q: "List all tables with row counts.", code: "SELECT T.name, I.rows FROM sys.tables T JOIN sys.sysindexes I ON T.object_id = I.id WHERE I.indid < 2;" },
+            { q: "Employees earning more than dept average.", code: "SELECT E.Name FROM Emp E WHERE Sal > (SELECT AVG(Sal) FROM Emp E2 WHERE E2.DeptID = E.DeptID);" },
+            { q: "COALESCE: First non-null contact.", code: "SELECT COALESCE(Home, Work, Mobile) FROM Contacts;" },
+            { q: "Convert timestamp to 'YYYY-MM-DD'.", code: "SELECT CONVERT(VARCHAR(10), GETDATE(), 120);" },
+            { q: "Find 'Employee of the Month' (Max orders).", code: "SELECT TOP 1 EmpID, COUNT(*) FROM Orders GROUP BY EmpID ORDER BY COUNT(*) DESC;" },
+            { q: "Recursive CTE for Org Chart.", code: "WITH Org AS (SELECT ID, Name, 0 as Lvl FROM Emp WHERE MgrID IS NULL UNION ALL SELECT E.ID, E.Name, Lvl+1 FROM Emp E JOIN Org O ON E.MgrID=O.ID) SELECT * FROM Org;" },
+            { q: "Find department with no employees.", code: "SELECT D.Name FROM Dept D LEFT JOIN Emp E ON D.ID = E.DeptID WHERE E.ID IS NULL;" },
+            { q: "Insert multiple rows in single query.", code: "INSERT INTO Employees VALUES (1,'A'), (2,'B'), (3,'C');" },
+            { q: "Create View to hide salary.", code: "CREATE VIEW PublicEmp AS SELECT Name, DeptID FROM Employees;" },
+            { q: "Optimize query using EXISTS vs IN.", code: "SELECT * FROM Emp E WHERE EXISTS (SELECT 1 FROM Mgr M WHERE M.ID = E.ID);" },
+            { q: "Find day of week for specific date.", code: "SELECT DATENAME(dw, GETDATE());" },
+            { q: "Remove whitespace left/right.", code: "SELECT LTRIM(RTRIM(Name)) FROM Employees;" },
+            { q: "Force query to use specific index.", code: "SELECT * FROM Employees WITH(INDEX(Idx_Salary)) WHERE Salary > 50000;" }
+        ];
+
+        // --- 3. STATE ---
+        let currentPage = 'cover';
+        let isAnimating = false;
+
+        // --- 4. RENDERERS ---
+        const leftEl = document.getElementById('left-page');
+        const rightEl = document.getElementById('right-page');
+        const bookEl = document.getElementById('book');
+
+        function renderCover() {
+            const leftHTML = `
+            <div class="cover-content">
+                <span style="font-size: 1.2rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;">Hand Book</span>
+                <h1 class="cover-title">SQL<br><span style="font-size: 0.5em; font-weight: 300;">SQL MASTER</span></h1>
+                <p class="cover-sub">100 Essential Interview Questions</p>
+                <div style="font-size: 4rem; color: var(--accent-primary); margin: 30px 0; opacity: 0.8;">❦</div>
+                <div class="author-block">
+                    <span class="author-name">Satyaki Das</span>
+                    <span class="author-title">Educator & Innovator</span>
+                </div>
+                <div style="margin-top:20px; font-size: 0.8rem; color: var(--text-dim); opacity: 0.7;">Copyright - Satyaki Das - Educator & Innovator</div>
+            </div>`;
+            const rightHTML = `
+            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; text-align:center;">
+                <p style="font-family:'Inter', sans-serif; letter-spacing:2px; color:var(--text-dim); margin-bottom:30px; font-style:italic;">Be Expert in Data</p>
+                <button class="run-btn" style="width:auto; padding:15px 40px;" onclick="flipPage('next', 'index')">Open Book</button>
+            </div>`;
+            return { left: leftHTML, right: rightHTML };
+        }
+
+        function renderIndex() {
+            let listHTML = `<ul class="index-list">`;
+            questions.forEach((q, i) => {
+                listHTML += `<li class="index-item"><a onclick="flipPage('next', ${i})"><span><b style="color:var(--accent-primary);">${i + 1}.</b> ${q.q}</span><span>Pg ${i + 1}</span></a></li>`;
+            });
+            listHTML += `</ul>`;
+            const leftHTML = `<div style="text-align:center; margin-top:40px;"><h1>Table of Contents</h1><button class="nav-btn" onclick="flipPage('prev', 'cover')">&larr; Close Book</button></div>
+            <div style="margin-top:auto; text-align:center; padding-top:20px; font-size: 0.8rem; color: var(--text-dim); border-top: 1px solid rgba(0,0,0,0.05);">Copyright - Satyaki Das - Educator & Innovator</div>`;
+            const rightHTML = `<div style="height:100%; overflow-y:auto;">${listHTML}</div>`;
+            return { left: leftHTML, right: rightHTML };
+        }
+
+        function renderQuestion(index) {
+            const q = questions[index];
+            const data = generateData(index, q.code);
+
+            const leftHTML = `
+            <h1>Question: ${index + 1}</h1>
+            <p style="color:var(--text-main); font-size:1rem;">${q.q}</p>
+            <span class="dataset-label">Query Syntax</span>
+            <div class="code-container"><code>${q.code}</code></div>
+            <div class="explanation-box"><strong>:: Note ::</strong><br>${getExplanation(q.code)}</div>
+            <div class="pagination"><button class="nav-btn" onclick="flipPage('prev', 'index')">Index</button><span>Page ${index + 1}</span></div>
+            <div style="text-align:center; margin-top:10px; font-size: 0.75rem; color: var(--text-dim);">Copyright - Satyaki Das - Educator & Innovator</div>`;
+
+            const rightHTML = `
+            <div style="display:flex; flex-direction:column; height:100%;">
+                <h2 style="border:none;">Workbench</h2>
+                <span class="dataset-label">Source Table: Employees</span>
+                <div class="table-wrapper">${renderTable(data.source, false)}</div>
+                
+                <div style="text-align:center; margin:15px 0;">
+                    <button id="runBtn_${index}" class="run-btn" onclick="runSimulation(${index}, '${btoa(JSON.stringify(data.result))}')">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Run Query
+                    </button>
+                </div>
+                
+                <div id="output_${index}" class="output-section">
+                    <span class="dataset-label" style="color:var(--accent-success)">OUTPUT STREAM</span>
+                    <div class="table-wrapper output-scroll-wrapper" style="border-top:2px solid var(--accent-success);">${renderTable(data.result, true)}</div>
+                </div>
+                
+                <div class="pagination" style="justify-content:flex-end;">
+                    <button class="nav-btn" onclick="flipPage('prev', ${index - 1})" ${index === 0 ? 'disabled' : ''}>&larr; PREV</button>
+                    <button class="nav-btn" style="margin-left:10px" onclick="flipPage('next', ${index + 1})" ${index === questions.length - 1 ? 'disabled' : ''}>NEXT &rarr;</button>
+                </div>
+            </div>`;
+            return { left: leftHTML, right: rightHTML };
+        }
+
+        // --- 5. LOGIC ENGINE ---
+        function generateData(index, sql) {
+            sql = sql.toUpperCase();
+            let result = { headers: [], rows: [] };
+
+            if (sql.includes('SELECT *') && !sql.includes('WHERE') && !sql.includes('TOP')) {
+                result = { headers: sourceData.headers, rows: sourceData.rows };
+            }
+            else if (sql.includes('SELECT NAME, SALARY')) {
+                result.headers = ['Name', 'Salary'];
+                result.rows = sourceData.rows.map(r => [r[1], r[3]]);
+            }
+            else if (sql.includes('DISTINCT DEPARTMENTID')) {
+                result.headers = ['DeptID'];
+                result.rows = [[1], [2], [3]];
+            }
+            else if (sql.includes('WHERE SALARY > 50000')) {
+                result.headers = sourceData.headers;
+                result.rows = sourceData.rows.filter(r => r[3] > 50000);
+            }
+            else if (sql.includes('YEAR(JOINED) = 2023')) {
+                result.headers = sourceData.headers;
+                result.rows = sourceData.rows.filter(r => r[4].includes('2023'));
+            }
+            else if (sql.includes("NAME LIKE 'A%'")) {
+                result.headers = sourceData.headers;
+                result.rows = sourceData.rows.filter(r => r[1].startsWith('A'));
+            }
+            else if (sql.includes("MGRID IS NULL")) {
+                result.headers = sourceData.headers;
+                result.rows = sourceData.rows.filter(r => r[5] === 'NULL');
+            }
+            else if (sql.includes('COUNT(*)')) {
+                if (sql.includes('GROUP BY')) {
+                    result.headers = ['DeptID', 'Count'];
+                    result.rows = [[1, 3], [2, 2], [3, 1]];
+                } else {
+                    result.headers = ['Total'];
+                    result.rows = [[6]];
+                }
+            }
+            else if (sql.includes('SUM(SALARY)')) {
+                result.headers = ['TotalSalary'];
+                result.rows = [[368000]];
+            }
+            else if (sql.includes('JOIN')) {
+                result.headers = ['Name', 'DeptName'];
+                result.rows = [['Alice', 'HR'], ['Bob', 'IT'], ['Charlie', 'HR'], ['David', 'Sales'], ['Eve', 'IT'], ['Frank', 'HR']];
+            }
+            else {
+                result.headers = sourceData.headers;
+                result.rows = [sourceData.rows[0], sourceData.rows[2]];
+            }
+
+            return { source: sourceData, result: result };
+        }
+
+        function getExplanation(code) {
+            if (code.includes('JOIN')) return "Links tables via common columns.";
+            if (code.includes('GROUP BY')) return "Aggregates rows by value.";
+            if (code.includes('WHERE')) return "Filters records by condition.";
+            return "Executes standard database retrieval.";
+        }
+
+        function renderTable(data, isResult) {
+            if (!data || !data.headers) return '';
+            let html = `<table class="sql-table"><thead><tr>`;
+            data.headers.forEach(h => html += `<th>${h}</th>`);
+            html += `</tr></thead><tbody>`;
+            data.rows.forEach(r => {
+                html += `<tr>`;
+                r.forEach(c => html += `<td>${c}</td>`);
+                html += `</tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        function runSimulation(index, encoded) {
+            const btn = document.getElementById(`runBtn_${index}`);
+            const div = document.getElementById(`output_${index}`);
+
+            btn.innerHTML = `Running...`;
+            btn.style.color = "var(--accent-secondary)";
+            btn.style.background = "#fff";
+
+            setTimeout(() => {
+                div.classList.add('visible');
+                const rows = div.querySelectorAll('tr');
+                rows.forEach((r, i) => {
+                    if (i > 0) {
+                        r.classList.add('anim-row');
+                        setTimeout(() => r.classList.add('show'), i * 50);
+                    }
+                });
+                btn.innerHTML = `Done`;
+                btn.style.borderColor = 'var(--accent-success)';
+                btn.style.color = 'var(--accent-success)';
+                btn.style.background = '#fff';
+                btn.style.boxShadow = 'none';
+            }, 400);
+        }
+
+        function flipPage(dir, target) {
+            if (isAnimating) return;
+            isAnimating = true;
+            const cls = dir === 'next' ? 'turn-next' : 'turn-prev';
+            bookEl.classList.add(cls);
+
+            setTimeout(() => {
+                currentPage = target;
+                let content;
+                if (target === 'cover') content = renderCover();
+                else if (target === 'index') content = renderIndex();
+                else content = renderQuestion(target);
+
+                leftEl.innerHTML = content.left;
+                rightEl.innerHTML = content.right;
+            }, 300);
+
+            setTimeout(() => {
+                bookEl.classList.remove(cls);
+                isAnimating = false;
+            }, 600);
+        }
+
+        // --- KEYBOARD NAVIGATION ---
+        document.addEventListener('keydown', (e) => {
+            if (isAnimating) return;
+
+            if (e.key === 'ArrowRight') {
+                // Logic for NEXT
+                if (currentPage === 'cover') flipPage('next', 'index');
+                else if (currentPage === 'index') flipPage('next', 0);
+                else if (typeof currentPage === 'number') {
+                    if (currentPage < questions.length - 1) {
+                        flipPage('next', currentPage + 1);
+                    }
+                }
+            }
+            else if (e.key === 'ArrowLeft') {
+                // Logic for PREV
+                if (currentPage === 'index') flipPage('prev', 'cover');
+                else if (currentPage === 0) flipPage('prev', 'index');
+                else if (typeof currentPage === 'number') {
+                    if (currentPage > 0) {
+                        flipPage('prev', currentPage - 1);
+                    }
+                }
+            }
+        });
+
+        // Init
+        const init = renderCover();
+        leftEl.innerHTML = init.left;
+        rightEl.innerHTML = init.right;
+
+    </script>
+</body>
+
+</html>
